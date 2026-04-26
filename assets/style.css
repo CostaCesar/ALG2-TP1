@@ -1,0 +1,90 @@
+@font-face {
+    font-family: 'Maple Mono';
+    src: url('/assets/MapleMono-Regular.ttf') format('truetype');
+    font-weight: 400;
+}
+@font-face {
+    font-family: 'Maple Mono';
+    src: url('/assets/MapleMono-SemiBold.ttf') format('truetype');
+    font-weight: 600;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Maple Mono', monospace; }
+
+/* Mapa ocupa a tela inteira */
+#mapa-container { position: relative; width: 100vw; height: 100vh; }
+#mapa { width: 100%; height: 100%; }
+
+/* Painel flutuante no canto inferior direito */
+#painel {
+    position: absolute;
+    bottom: 32px;
+    right: 32px;
+    z-index: 1000;
+    width: 320px;
+    background: #faf8f4;
+    border-radius: 4px;
+    padding: 32px;
+    box-shadow: 0 2px 20px rgba(0,0,0,0.15);
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+#painel-titulo {
+    font-size: 28px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    color: #1a1814;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #e0d8cc;
+}
+
+.campo {
+    display: flex;
+    flex-direction: column;
+    gap: 10px; /* Distância entre o label e o input */
+}
+
+.campo label {
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: #1a1814;
+}
+
+.campo input {
+    width: 100%;
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid #d8d0c4;
+    color: #1a1814;
+    font-family: 'Maple Mono', monospace;
+    font-size: 13px;
+    padding: 8px 10px;
+    outline: none;
+    transition: border-bottom-color 0.2s;
+}
+
+.campo input::placeholder { color: #c4bdb0; }
+.campo input:focus { border-bottom-color: #1a1814; }
+
+
+button {
+    width: 100%;
+    background: #1a1814;
+    color: #faf8f4;
+    border: none;
+    border-radius: 2px;
+    padding: 13px;
+    font-family: 'Maple Mono', monospace;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    cursor: pointer;
+}
+
+button:hover { background: #2e2a24; }
