@@ -1,6 +1,6 @@
 from math import floor
 from copy import deepcopy
-from typing import NamedTuple
+from typing import NamedTuple, Self
 
 # Module classes
 
@@ -9,7 +9,7 @@ class Point:
     Struct to hold point coordinates
     """
 
-    def __init__(self, x: float | None = None , y:  float | None = None):
+    def __init__(self, x: float = -1, y:  float = -1):
         self.x = x
         self.y = y
 
@@ -44,11 +44,11 @@ class Limit:
     """
 
     def __init__(self):
-        self.x: Range = None
-        self.y: Range = None
+        self.x = Range(min=-100000, max=100000)#: Range = None
+        self.y = Range(min=-100000, max=100000)#: Range = None
 
 
-    def get_coord(self, axis: int) -> float:
+    def get_coord(self, axis: int) -> Range:
         """
         Where:
         axis = 0 -> X axis
@@ -73,11 +73,11 @@ class _KdNode:
     # TODO: Reference to node's parent
 
     def __init__(self):
-        self.bounds = None
-        self.level = None
-        self.point = None
-        self.left_node = None
-        self.right_node = None
+        self.bounds = Limit()
+        self.level = -1
+        self.point = Point()
+        self.left_node : Self | None = None
+        self.right_node : Self | None = None
 
     
     def is_leaf(self) -> bool:
@@ -85,7 +85,7 @@ class _KdNode:
 
 
     @classmethod
-    def create_root(cls) -> Point:
+    def create_root(cls) -> Self:
         out = cls()
         out.level = 0
         return out
@@ -121,7 +121,7 @@ class KdTree:
         half_length = floor(len(points) / 2)
 
         if len(points) == 1:
-            return (points[0], points[0].get_coord(axis), None)
+            return ([points[0]], points[0].get_coord(axis), [])
 
         points.sort(key=lambda point: point.get_coord(axis))
         if len(points) % 2 == 0:
@@ -149,7 +149,7 @@ class KdTree:
             left_bounds.y = Range._make((bounds.x.min, division[1]))  
             right_bounds.y = Range._make((division[1], bounds.x.max)) 
 
-        if division[2] != None:
+        if len(division[2]) > 0:
             node.left_node = _KdNode()
             node.left_node.level = node.level + 1
             self._build_tree(division[0], node.left_node, left_bounds)
@@ -158,19 +158,19 @@ class KdTree:
             node.right_node.level = node.level + 1
             self._build_tree(division[2], node.right_node, right_bounds)
         else:
-            node.point = division[0]
+            node.point = division[0][0]
 
 
-    def _include_branch(self, node: _KdNode) -> list[_KdNode]:
+    def _include_branch(self, node: _KdNode | None) -> list[_KdNode]:
         if node is None:
-            return None    
+            return []  
         elif node.is_leaf():
             return [node]
 
         return self._include_branch(node.left_node) + [node] + self._include_branch(node.right_node)
 
 
-    def _kd_search(self, node: _KdNode, limits: Limit) -> list[_KdNode]:
+    def _kd_search(self, node: _KdNode | None, limits: Limit) -> list[_KdNode]:
         if node is None:
             raise IndexError("Tree should not contain childless internal nodes")
 
@@ -180,15 +180,15 @@ class KdTree:
             else: return []
 
         if is_limit_inside(node.bounds, limits):
-            return _include_branch(node)
+            return self._include_branch(node)
 
         axis = node.level % 2
         output = []
 
-        if is_limit_intersect(node.left_node.bounds, limits): # node.value >= limits.get_coord(axis).min:
+        if node.left_node and is_limit_intersect(node.left_node.bounds, limits): # node.value >= limits.get_coord(axis).min:
             output = output + self._kd_search(node.left_node, limits)
 
-        if is_limit_intersect(node.right_node.bounds, limits): # node.value >= limits.get_coord(axis).min:
+        if node.right_node and is_limit_intersect(node.right_node.bounds, limits): # node.value >= limits.get_coord(axis).min:
             output = output + self._kd_search(node.right_node, limits)
 
         return output
@@ -202,7 +202,7 @@ class KdTree:
         Returns: A list containing all points inside the bounding box (including the borders)
         """
         if self._size == 0:
-            return None
+            return []
         
         limits = Limit()
         limits.x = Range._make(sorted(x_limits))
@@ -213,7 +213,7 @@ class KdTree:
         return list(map(lambda node: node.point, node_list))
 
 
-    def _knn_search(self, node, center, radius_sqrd) -> list[_KdNode]:
+    def _knn_search(self, node: _KdNode | None, center: Point, radius_sqrd: float) -> list[_KdNode]:
         if node is None:
             return []
         
@@ -244,7 +244,7 @@ class KdTree:
         Returns: A list containg all points inside the bounding circle (including th border)
         """
         if self._size == 0:
-            return None
+            return []
 
         center_point = Point(center[0], center[1]);
         node_list = self._knn_search(self._root, center_point, radius ** 2)
