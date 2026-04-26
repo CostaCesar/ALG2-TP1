@@ -8,6 +8,8 @@ my_points = [Point(5, 5), Point(2, 3), Point(8, 1), Point(9, 6), Point(4, 7), Po
 my_tree = KdTree(my_points)
 
 result = my_tree.search_in_rectangle((4,8), (1,5))
+print(result)
 
+result = my_tree.search_in_circle((5,5), 3)
 print(result)
 

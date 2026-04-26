@@ -102,6 +102,11 @@ class KdTree:
     # TODO: KNN Search for spherical search
 
     def __init__(self, points: list[Point]):
+        if len(points) < 1:
+            self._root = None
+            self._size = 0
+            return
+            
         self._root = _KdNode.create_root()
 
         root_bounds = Limit()
@@ -208,8 +213,65 @@ class KdTree:
         return list(map(lambda node: node.point, node_list))
 
 
+    def _knn_search(self, node, center, radius_sqrd) -> list[_KdNode]:
+        if node is None:
+            return []
+        
+        dist_sqrd = get_closest_dist(center, node.bounds)
+        if dist_sqrd > radius_sqrd:
+            return []
+
+        # TODO: mass inclusion
+        if dist_sqrd >= get_farthest_dist(center, node.bounds):
+            self._include_branch(node)
+
+        output = []
+        if node.is_leaf():
+            if distance_2(node.point, center) <= radius_sqrd:
+                output = [node]
+        else:
+            output = output + self._knn_search(node.left_node, center, radius_sqrd)
+            output = output + self._knn_search(node.right_node, center, radius_sqrd)
+
+        return output
+
+
+    def search_in_circle(self, center: tuple[float, float], radius:float) -> list[Point]:
+        """
+        center: The center point of the circular area
+        radius: The radius of the circle
+
+        Returns: A list containg all points inside the bounding circle (including th border)
+        """
+        if self._size == 0:
+            return None
+
+        center_point = Point(center[0], center[1]);
+        node_list = self._knn_search(self._root, center_point, radius ** 2)
+
+        return list(map(lambda node: node.point, node_list))
+    
+
 
 # Module Functions
+
+def get_farthest_dist(source: Point, region: Limit) -> float:
+    dx = max(abs(source.x - region.x.min), abs(source.x - region.x.max))
+    dy = max(abs(source.y - region.y.min), abs(source.y - region.y.max))
+    
+    return dx*dx + dy*dy
+
+
+def get_closest_dist(source: Point, region: Limit) -> float:
+    dx = max(region.x.min - source.x, 0, source.x - region.x.max)
+    dy = max(region.y.min - source.y, 0, source.y - region.y.max)
+    
+    return dx*dx + dy*dy
+
+
+def distance_2(a: Point, b: Point) -> float:
+    return ((b.x - a.x) ** 2) + ((b.y - a.y) ** 2)
+
 
 def is_limit_inside(inner: Limit, outter: Limit) -> bool:
     if inner.x.min < outter.x.min or inner.x.max > outter.x.max:
