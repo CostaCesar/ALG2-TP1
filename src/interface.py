@@ -1,110 +1,119 @@
 import dash_leaflet as dl
-import time
 from dash import Dash, Input, Output, State, callback, dcc, html
 from geopy.geocoders import Nominatim
 from geopy.distance import distance
 from math import sqrt
 
 BH_CENTER = [-19.9191, -43.9386]
-convertor = Nominatim(user_agent="SlaMundo") # Converte os endereços em coordenadas
 
-app_tree = None
+ICON_CENTRO = {
+    "iconUrl": "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png",
+    "shadowUrl": "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png",
+    "iconSize": [25, 41],
+    "iconAnchor": [12, 41],
+} # Marker do centro
 
-def register_layout(app: Dash, tree):
-    global app_tree
-    app_tree = tree
 
-    app.layout = html.Div(id="mapa-container", children=[
+class Interface:
 
-        # Mapa dash leaflet
-        dl.Map(id="mapa", center=BH_CENTER, zoom=14, # type: ignore
-               style={"width": "100%", "height": "100%"},
-               children=[
-                   dl.TileLayer(),
-                   dl.LayerGroup(id="layer-markers"),  # Markers, atualiza com a kd_tree
-               ]),
+    def __init__(self, app: Dash, tree, nomes: dict):
+        self.tree = tree
+        self.nomes = nomes  # (lat, lon) -> nome do bar
+        self.convertor = Nominatim(user_agent="SlaMundo")
+        self._register_layout(app)
+        self._register_callbacks(app)
 
-        # Painel principal
-        html.Div(id="painel", children=[
+    def _register_layout(self, app: Dash):
+        app.layout = html.Div(id="mapa-container", children=[
 
-            html.Div("Butecos-BH", id="painel-titulo"),
+            # Mapa principal
+            dl.Map(id="mapa", center=BH_CENTER, zoom=14,  # type: ignore
+                   style={"width": "100%", "height": "100%"},
+                   children=[
+                       dl.TileLayer(),
+                       dl.LayerGroup(id="layer-markers"),  # Markers, são atualizados pelo callback
+                   ]),
 
-            # Inputs
-            html.Div(className="campo", children=[
-                html.Label("Endereço", htmlFor="input-endereco"),
-                dcc.Input(id="input-endereco", type="text", placeholder="av. afonso pena, 1000"),
+            # Painel flutuante
+            html.Div(id="painel", children=[
+                html.Div("Butecos-BH", id="painel-titulo"),
+
+                html.Div(className="campo", children=[
+                    html.Label("Endereço", htmlFor="input-endereco"),
+                    dcc.Input(id="input-endereco", type="text", placeholder="av. afonso pena, 1000"),
+                ]),
+
+                html.Div(className="campo", children=[
+                    html.Label("Diagonal (km)", htmlFor="input-diagonal"),
+                    dcc.Input(id="input-diagonal", type="number", placeholder="2.0", min=0.1, step=0.1),
+                ]),
+
+                html.Button("buscar", id="btn-buscar", n_clicks=0),
             ]),
+        ])
 
-            html.Div(className="campo", children=[
-                html.Label("Diagonal (km)", htmlFor="input-diagonal"),
-                dcc.Input(id="input-diagonal", type="number", placeholder="2.0", min=0.1, step=0.1),
-            ]),
+    def _register_callbacks(self, app: Dash):
 
-            html.Button("buscar", id="btn-buscar", n_clicks=0), # Butão que captura o estado dos inputs
-        ]),
-    ])
+        @app.callback(
+            Output("layer-markers", "children"),  # Atualiza os markers no mapa
+            Input("btn-buscar", "n_clicks"),      # Dispara ao clicar
+            State("input-endereco", "value"),     # Lê o endereço sem disparar
+            State("input-diagonal", "value"),     # Lê a diagonal sem disparar
+            prevent_initial_call=True             # Não roda ao carregar a página
+        )
+        def buscar(n_clicks, endereco, diagonal):
+            if not endereco or not diagonal:
+                return []
 
+            location = self.convertor.geocode(f"{endereco}, Belo Horizonte, MG")
+            if location is None:
+                print("Endereço não encontrado")
+                return []
 
-@callback(
-    Output("layer-markers", "children"),  # Atualiza os markers no mapa
-    Input("btn-buscar", "n_clicks"),      # Dispara ao clicar
-    State("input-endereco", "value"),     # Lê o endereço sem disparar
-    State("input-diagonal", "value"),     # Lê a diagonal sem disparar
-    prevent_initial_call=True             # Não roda ao carregar a página
-)
+            lat = location.latitude   # type: ignore
+            lon = location.longitude  # type: ignore
 
+            lado  = diagonal / sqrt(2)
+            h_lado = lado / 2
 
-def buscar(n_clicks, endereco, diagonal):
-    # Dispara a função do kd-tree
-    time.sleep(1)
-    if not endereco or not diagonal: return []
-    location = convertor.geocode(f"{endereco}, Belo Horizonte, MG")
-    
-    if location is None:
-        print("Endereço não pode ser resolvido")
-        return []
+            # Extremos:
 
-    lat = location.latitude #type: ignore
-    lon = location.longitude #type: ignore
-
-    lado = diagonal / sqrt(2) # Não ficou claro pela especificação, então fiz como centro da diagonal
-    h_lado = lado / 2 # metade do lado
-
-    origem = (lat, lon)
-
-    north = distance(kilometers=h_lado).destination(origem, bearing=0)
-    south = distance(kilometers=h_lado).destination(origem, bearing=180)
-    east  = distance(kilometers=h_lado).destination(origem, bearing=90)
-    west  = distance(kilometers=h_lado).destination(origem, bearing=270)
-
-    lat_min = south.latitude
-    lat_max = north.latitude
-    lon_min = west.longitude
-    lon_max = east.longitude
-
-    results = app_tree.search_in_rectangle( # type: ignore
-        (lat_min, lat_max),
-        (lon_min, lon_max)
-    )
-
-    if not results:
-        return [dl.Marker(position=(lat, lon))] # type: ignore
-
-    # Markers dos bares encontrados
-    markers = [
-            dl.Marker(position=[float(p.x), float(p.y)]) # type: ignore
-        for p in results if p is not None
-    ]
-
-    # Marker do endereço buscado
-    markers.append(dl.Marker(position=[lat, lon])) # type: ignore
-
-    # Retângulo da área de busca
-    rectangle = dl.Rectangle(
-        bounds=[[lat_min, lon_min], [lat_max, lon_max]], # type: ignore 
-        color="red"
-    )
-
-    return markers + [rectangle]
+            origem = (lat, lon)
+            lat_max = distance(kilometers=h_lado).destination(origem, bearing=0).latitude
+            lat_min = distance(kilometers=h_lado).destination(origem, bearing=180).latitude
+            lon_max = distance(kilometers=h_lado).destination(origem, bearing=90).longitude
+            lon_min = distance(kilometers=h_lado).destination(origem, bearing=270).longitude
 
 
+            # Obtendo os pontos que estão na área de interesse
+            results = self.tree.search_in_rectangle(
+                (lat_min, lat_max),
+                (lon_min, lon_max)
+            ) or []
+
+            print(f"Resultados: {len(results)}")
+            print(f"Exemplo chave nomes: {list(self.nomes.keys())[:3]}")
+            if results:
+                p = results[0]
+                print(f"Exemplo ponto: ({p.x}, {p.y})")
+                print(f"Chave existe: {(p.x, p.y) in self.nomes}")
+
+            # Markers dos bares com tooltip de nome
+            markers = [
+                dl.Marker(
+                    position=(float(p.x), float(p.y)),                    # type: ignore
+                    children=dl.Tooltip(self.nomes.get((p.x, p.y), "?")),
+                )
+                for p in results if p is not None
+            ]
+
+            # Marker do centro
+            markers.append(dl.Marker(position=(lat, lon), icon=ICON_CENTRO))  # type: ignore
+
+            # Retângulo da área de busca:
+            rectangle = dl.Rectangle(
+                bounds=((lat_min, lon_min), (lat_max, lon_max)),  # type: ignore
+                color="red"
+            )
+
+            return markers + [rectangle]
