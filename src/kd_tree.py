@@ -146,8 +146,8 @@ class KdTree:
             left_bounds.x = Range._make((bounds.x.min, division[1]))  
             right_bounds.x = Range._make((division[1], bounds.x.max)) 
         else:
-            left_bounds.y = Range._make((bounds.x.min, division[1]))  
-            right_bounds.y = Range._make((division[1], bounds.x.max)) 
+            left_bounds.y = Range._make((bounds.y.min, division[1]))  
+            right_bounds.y = Range._make((division[1], bounds.y.max)) 
 
         if len(division[2]) > 0:
             node.left_node = _KdNode()
@@ -221,11 +221,11 @@ class KdTree:
         if dist_sqrd > radius_sqrd:
             return []
 
+        output = []
         # TODO: mass inclusion
         if dist_sqrd >= get_farthest_dist(center, node.bounds):
-            self._include_branch(node)
+            output = output + self._include_branch(node)
 
-        output = []
         if node.is_leaf():
             if distance_2(node.point, center) <= radius_sqrd:
                 output = [node]
@@ -296,9 +296,9 @@ def tuple_to_point(point: tuple[float, float]) -> Point:
 
 
 def is_limit_intersect(a: Limit, b: Limit) -> bool:
-    if a.x.min <= b.x.max and b.x.min <= a.x.max:
-        return True
-    if a.y.min <= b.y.max and b.y.min <= a.y.max:
-        return True
-    
-    return False
+    if a.x.min > b.x.max or b.x.min > a.x.max:
+        return False
+    if a.y.min > b.y.max or b.y.min > a.y.max:
+        return False
+
+    return True
