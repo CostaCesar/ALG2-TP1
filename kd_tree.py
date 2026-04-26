@@ -9,7 +9,7 @@ class Point:
     Struct to hold point coordinates
     """
 
-    def __init__(self, x: float = None, y: float = None):
+    def __init__(self, x: float | None = None , y:  float | None = None):
         self.x = x
         self.y = y
 
