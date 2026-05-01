@@ -40,7 +40,7 @@ class Interface:
 
                 html.Div(className="campo", children=[
                     html.Label("Endereço", htmlFor="input-endereco"),
-                    dcc.Input(id="input-endereco", type="text", placeholder="av. afonso pena, 1000"),
+                    dcc.Input(id="input-endereco", type="text", placeholder="av. do contorno, 5809"),
                 ]),
 
                 html.Div(className="campo", children=[
@@ -57,10 +57,10 @@ class Interface:
         @app.callback(
             Output("layer-markers", "children"),  # Atualiza os markers no mapa
             Input("btn-buscar", "n_clicks"),      # Dispara ao clicar
-            State("input-endereco", "value"),     # Lê o endereço sem disparar
-            State("input-diagonal", "value"),     # Lê a diagonal sem disparar
-            prevent_initial_call=True             # Não roda ao carregar a página
+            State("input-endereco", "value"),     # Guarda o endereço
+            State("input-diagonal", "value"),     # Guarda a diagonal
         )
+
         def buscar(n_clicks, endereco, diagonal):
             if not endereco or not diagonal:
                 return []
@@ -91,12 +91,8 @@ class Interface:
                 (lon_min, lon_max)
             ) or []
 
-            print(f"Resultados: {len(results)}")
-            print(f"Exemplo chave nomes: {list(self.nomes.keys())[:3]}")
             if results:
                 p = results[0]
-                print(f"Exemplo ponto: ({p.x}, {p.y})")
-                print(f"Chave existe: {(p.x, p.y) in self.nomes}")
 
             # Markers dos bares com tooltip de nome
             markers = [
