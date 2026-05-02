@@ -7,12 +7,11 @@ from math import sqrt
 BH_CENTER = [-19.9191, -43.9386]
 
 ICON_CENTRO = {
-    "iconpath": "../assets/marker-icon-red.png",
-    "shadowpath": "../assets/marker-shadow.png",
+    "iconUrl": "/assets/marker-icon-red.png",
+    "shadowUrl": "/assets/marker-shadow.png",
     "iconSize": [25, 41],
-    #"iconAnchor": [12, 41],
-} # Marker do centro
-
+    "iconAnchor": [12, 41]
+    }
 
 class Interface:
 
