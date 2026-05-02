@@ -70,8 +70,6 @@ class _KdNode:
     Even levels are ordered by the X (first) component, while odd are ordered by the Y (second)
     """
 
-    # TODO: Reference to node's parent
-
     def __init__(self):
         self.bounds = Limit()
         self.level = -1
@@ -98,8 +96,6 @@ class KdTree:
 
     The tree is built once by passing all the points as a list of "Point"
     """
-
-    # TODO: KNN Search for spherical search
 
     def __init__(self, points: list[Point]):
         if len(points) < 1:
@@ -174,21 +170,21 @@ class KdTree:
         if node is None:
             raise IndexError("Tree should not contain childless internal nodes")
 
-        if node.is_leaf():
+        if node.is_leaf(): # Normal include
             if is_point_inside(node.point, limits):
                 return [node]
             else: return []
 
-        if is_limit_inside(node.bounds, limits):
+        if is_limit_inside(node.bounds, limits): # Mass-inclusion
             return self._include_branch(node)
 
         axis = node.level % 2
         output = []
 
-        if node.left_node and is_limit_intersect(node.left_node.bounds, limits): # node.value >= limits.get_coord(axis).min:
+        if node.left_node and is_limit_intersect(node.left_node.bounds, limits): # Prune or keep searching
             output = output + self._kd_search(node.left_node, limits)
 
-        if node.right_node and is_limit_intersect(node.right_node.bounds, limits): # node.value >= limits.get_coord(axis).min:
+        if node.right_node and is_limit_intersect(node.right_node.bounds, limits): # Prune or keep searching
             output = output + self._kd_search(node.right_node, limits)
 
         return output
@@ -218,18 +214,18 @@ class KdTree:
             return []
         
         dist_sqrd = get_closest_dist(center, node.bounds)
-        if dist_sqrd > radius_sqrd:
+        if dist_sqrd > radius_sqrd: # Prune
             return []
 
         output = []
-        # TODO: mass inclusion
-        if dist_sqrd >= get_farthest_dist(center, node.bounds):
+
+        if dist_sqrd >= get_farthest_dist(center, node.bounds): # Mass-include
             output = output + self._include_branch(node)
 
-        if node.is_leaf():
+        if node.is_leaf(): # Normal inclusion
             if distance_2(node.point, center) <= radius_sqrd:
                 output = [node]
-        else:
+        else: # Keep searching
             output = output + self._knn_search(node.left_node, center, radius_sqrd)
             output = output + self._knn_search(node.right_node, center, radius_sqrd)
 
