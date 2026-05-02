@@ -6,10 +6,10 @@ geo = Nominatim(user_agent='teste')
 
 # Esse módulo serve pra converter o butecos_bh.csv em coordenadas (lat, lon) e armazena em locations.csv
 
-with open('butecos_bh.csv', mode='r') as input:
+with open('../data/butecos_bh.csv', mode='r') as input:
     csvfile = csv.reader(input, delimiter=';')
     
-    with open('butecos_geocoded.csv', mode='w', newline='') as output:
+    with open('../data/butecos_geocoded.csv', mode='w', newline='') as output:
 
         writer = csv.writer(output, delimiter=';')        
         next(csvfile) # Pula name;address
@@ -24,7 +24,7 @@ with open('butecos_bh.csv', mode='r') as input:
                 if location == None: 
                     continue
 
-                writer.writerow([bar_name, location.latitude, location.longitude]) # type: ignore
+                writer.writerow([address, bar_name, location.latitude, location.longitude]) # type: ignore
 
             except Exception as e:
                 print(f"Erro: {e}")

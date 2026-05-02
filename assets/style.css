@@ -88,3 +88,54 @@ button {
 }
 
 button:hover { background: #2e2a24; }
+
+/* Gaveta da tabela — lado esquerdo */
+
+#container-tabela {
+    position: absolute;
+    top: 80px;
+    left: 10px;
+    z-index: 1000;
+    display: flex;
+    align-items: flex-start;
+    pointer-events: none; /* deixa o mapa clicável por baixo */
+}
+
+#btn-toggle-tabela {
+    pointer-events: all;
+    width: auto;
+    padding: 6px 10px;
+    border-radius: 2px;
+    font-size: 16px;
+    letter-spacing: 0;
+    text-transform: none;
+    flex-shrink: 0;
+}
+
+#tabela-wrapper {
+    pointer-events: all;
+    width: 0;
+    max-height: 60vh;
+    overflow: hidden;
+    background: #faf8f4;
+    border-radius: 0 4px 4px 0;
+    box-shadow: 0 2px 20px rgba(0,0,0,0.15);
+    transition: width 0.3s ease;
+}
+
+#tabela-wrapper.aberta {
+    width: 420px;
+    padding: 32px;
+    overflow-y: auto;
+}
+
+#tabela-bares { width: 100%; border-collapse: collapse; font-size: 12px; }
+#tabela-bares th {
+    font-size: 10px; font-weight: 600;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    color: #1a1814; border-bottom: 1px solid #e0d8cc;
+    padding: 8px 6px; text-align: left;
+}
+#tabela-bares td { padding: 10px 6px; color: #3a3630; border-bottom: 1px solid #f0ece4; }
+#tabela-bares tr:last-child td { border-bottom: none; }
+#tabela-bares tr:hover td { background: #f0ece4; }

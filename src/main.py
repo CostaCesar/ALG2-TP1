@@ -4,23 +4,23 @@ from interface import Interface
 import csv
 
 pontos = []
-nomes  = {}
+bar_data = {} # ponto -> {nome do bar, endereço} 
 
 with open('../data/butecos_geocoded.csv', 'r') as f:
     for row in csv.reader(f, delimiter=';'):
         try:
-            nome = row[0]
-            lat  = float(row[1])
-            lon  = float(row[2])
+            address = row[0]
+            name = row[1]
+            lat  = float(row[2])
+            lon  = float(row[3])
             pontos.append(Point(x=lat, y=lon))
-            nomes[(lat, lon)] = nome
+            bar_data[(lat, lon)] = {"name": name, "address": address}
         except:
             continue
 
 app = Dash(__name__, assets_folder="../assets/")
-Interface(app, KdTree(pontos), nomes)
+Interface(app, KdTree(pontos), bar_data)
 
 if __name__ == "__main__":
-    print(f"Pontos carregados: {len(pontos)}")
-    print(f"Nomes carregados: {len(nomes)}")
+    print(f"Pontos carregados: {len(pontos)}") # Debug
     app.run(debug=False)
