@@ -197,7 +197,7 @@ class Interface:
                     "endereco": self.bar_data.get((p.x, p.y), {}).get("address", "?"),
                     "dist":     round(distance((lat, lon), (p.x, p.y)).km, 2)
                 }
-                for p in results if p
+                for p in results if p and self.bar_data.get((p.x, p.y)) # Só adciona pontos que estão na árvore, existe um bug no deafletleaf que adcionava um marker "padrão"
             ], key=lambda r: r["dist"]) # Compara pela distância.
 
             return [
