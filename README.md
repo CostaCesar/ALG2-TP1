@@ -19,7 +19,7 @@ região retângular segue a lógica da busca em intervalo, enquanto a busca em c
 - **geopy**: A biblioteca que converte endereços em localizações 
 
 ## Como executar?
-Após clonar o repositório, baixe as dependencias com `pip install -r requirements.txt` e execute o arquivo `main.py` em `src/`
+Após clonar o repositório, baixe as dependencias com `pip install -r requirements.txt` e execute o arquivo `main.py` em `src/`. O terminal irá produzir uma URL do tipo `http://127.0.0.1:1000`, na qual será possível acessar e interagir com o programa
 
 *É recomendável fazer isso em um ambiente python isolado, como `venv`*
 
@@ -28,4 +28,4 @@ Após clonar o repositório, baixe as dependencias com `pip install -r requireme
 - Caio César Moraes Costa
 - Leonardo Barreto Gaião
 
-#### Esse projeto é a entrega de nosso trabalho de Algoritimos II. Leia o relatório para mais detalhes
+#### Esse projeto é a entrega de nosso trabalho de Algoritimos II. Leia o relatório incluso para mais detalhes
